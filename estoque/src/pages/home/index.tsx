@@ -31,7 +31,7 @@ export function Home() {
 
           <div className="flex flex-col px-2">
             <span className="text-zinc-700 mb-6">Data 15/12/2025</span>
-            <strong className="text-black font-medium text-xl">Mac fd:er:we:r4:6y:w2</strong>
+            <strong className="text-black font-medium text-xl">Mac: fderwer46yw2</strong>
           </div>
 
           <div className="w-full h-px bg-slate-200 my-2"></div>
