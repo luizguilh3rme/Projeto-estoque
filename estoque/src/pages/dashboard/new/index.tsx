@@ -3,7 +3,7 @@ import { useState, useContext } from "react"
 import { Container } from "../../../components/container"
 import { DashboardHeader } from "../../../components/panelheader"
 
-import {FiUpload} from 'react-icons/fi'
+import {FiUpload, FiTrash} from 'react-icons/fi'
 import {useForm} from 'react-hook-form'
 import {Input} from '../../../components/input'
 import {z} from 'zod'
@@ -11,8 +11,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthContext } from '../../../contexts/AuthContext'
 import {v4 as uuidV4} from 'uuid'
 
-import  {storage} from '../../../services/firebaseConnection'
+import  {storage, db } from '../../../services/firebaseConnection'
 import {ref, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage'
+import {addDoc, collection} from 'firebase/firestore'
 
 const schema = z.object({
   model: z.string().nonempty("O campo modelo é obrigatório"),
@@ -27,12 +28,21 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+interface ImageItemProps{
+  uid: string;
+  name: string;
+  previewUrl: string;
+  url: string;
+}
+
 export function New() {
   const {user} = useContext(AuthContext);
   const {register, handleSubmit, formState: {errors}, reset } = useForm<FormData>({
     resolver:  zodResolver(schema),
     mode: "onChange"
   })
+
+  const [rotImages, setRotImages] = useState<ImageItemProps[]>([])
 
 
   async function handleFile( e: ChangeEvent<HTMLInputElement>){
@@ -65,14 +75,70 @@ export function New() {
     uploadBytes(uploadRef, image)
     .then((snapshot) => {
       getDownloadURL(snapshot.ref).then((DownloadURL) => {
-        console.log("URL DE ACESSO DA FOTO", DownloadURL);
+        const imageItem = {
+          name: uidImage,
+          uid: currentUid,
+          previewUrl: URL.createObjectURL(image), //Esse é um preview que aparece da imagem quando selecionada, "um clone" da imagem original
+          url: DownloadURL, //Esse é a imagem original que esta no banco de dados
+        }
+
+        setRotImages((images) => [...images,imageItem])
       })
     })
   }
 
 
   function onSubmit(data: FormData){
-    console.log(data);
+
+    if(rotImages.length === 0){
+      alert("Envie alguma imagem deste equipamento")
+      return;
+    }
+
+    const rotListImages = rotImages.map(rot => {
+      return{
+        uid: rot.uid,
+        name: rot.name,
+        url: rot.url
+      }
+    })
+
+    addDoc(collection(db, "equipamentos"), { //será o id aleatório criado fire store do banco de dados
+      model: data.model,
+      fabricante: data.fabricante,
+      mac: data.mac,
+      NumeroSerie: data.numeroSerie,
+      data: data.data,
+      price: data.price,
+      created: new Date(),
+      owner: user?.name,
+      uid: user?.uid,
+      images: rotListImages,
+    }) 
+    .then(() =>{
+      reset();
+      setRotImages([]);
+      console.log("Cadastrado com sucesso!");
+    })
+    .catch((error) => {
+      console.log(error)
+      console.log("Erro ao cadastrar no banco")
+    })
+    
+  }
+
+  async function handleDeleteImage(item: ImageItemProps){
+    const imagePath = `images/${item.uid}/${item.name}`; //Esse é o diretório para ir no fire base apagar a imagem quando clicar no botão delete
+    
+    const imageRef = ref(storage, imagePath);
+
+    try{
+      await deleteObject(imageRef)
+      setRotImages(rotImages.filter((rot) => rot.url !== item.url))
+    } catch(err){
+      console.log("Erro ao deletar")
+    }
+  
   }
 
   return (
@@ -88,6 +154,17 @@ export function New() {
             <input type="file" accept="image/*" className="opacity-0 cursor-pointer" onChange={handleFile} />
           </div>
         </button>
+
+        {rotImages.map( item => (
+          <div key={item.name} className="w-full h-32 flex items-center justify-center relative">
+            <button className="absolute" onClick={() => handleDeleteImage(item)} >
+            <FiTrash size={28} color="#FFF"/>
+            </button>
+            <img src={item.previewUrl}
+            className="rounded-lg w-full  h-32 object-cover" 
+            alt="Foto do equipamento" />
+          </div>
+        ))}
       </div>
 
       <div className="w-full bg-white p-3 rounded-lg flex flex-col sm:flex-row items-center gap-2 mt-2">

@@ -13,7 +13,7 @@ export function DashboardHeader(){
             <Link to="/dashboard">
                 Dashboard
             </Link>
-            <Link to="/dasboard/new">
+            <Link to="/dashboard/new">
                 Cadastrar roteador
             </Link>
 
