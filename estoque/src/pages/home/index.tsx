@@ -1,6 +1,42 @@
+import {useState, useEffect} from 'react'
 import { Container } from "../../components/container";
 
+import {collection, query, getDocs, orderBy, getDoc} from 'firebase/firestore'
+import {db} from '../../services/firebaseConnection'
+
+interface RotsProps{
+  id: string;
+  model: string;
+  data: string;
+  mac: string;
+  price: string | number;
+  fabricante: string;
+  NumeroSerie: string;
+  images: RotImageProps[];  
+}
+
+interface RotImageProps{
+  name: string;
+  uid: string;
+  url: string;
+}
+
 export function Home() {
+  const [rots, setRots] = useState<RotsProps[]>([])
+  
+  useEffect (() => {
+    function loadRots(){
+      const rotsRef = collection(db, "rots")
+      const queryRef = query(rotsRef, orderBy("created", "desc"))
+
+      getDocs(queryRef)
+      .then((snapshot) => {
+        console.log(snapshot.docs)
+      })
+    }
+
+    loadRots();
+  }, [])
 
   return (
     <Container>
@@ -32,6 +68,8 @@ export function Home() {
           <div className="flex flex-col px-2">
             <span className="text-zinc-700 mb-6">Data 15/12/2025</span>
             <strong className="text-black font-medium text-xl">Mac: fderwer46yw2</strong>
+            <strong className="text-black font-medium text-xl">NS: NSerwer46yw2</strong>
+            <strong className="text-black font-medium text-xl">Fabricante: Eurotech</strong>
           </div>
 
           <div className="w-full h-px bg-slate-200 my-2"></div>

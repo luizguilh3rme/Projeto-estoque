@@ -103,7 +103,7 @@ export function New() {
       }
     })
 
-    addDoc(collection(db, "equipamentos"), { //será o id aleatório criado fire store do banco de dados
+    addDoc(collection(db, "Rots"), { //será o id aleatório criado fire store do banco de dados
       model: data.model,
       fabricante: data.fabricante,
       mac: data.mac,
