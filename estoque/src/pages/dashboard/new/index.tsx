@@ -19,7 +19,7 @@ const schema = z.object({
   model: z.string().nonempty("O campo modelo é obrigatório"),
   fabricante: z.string().nonempty("O campo fabricante é obrigatório"),
   mac: z.string().nonempty("O mac é obrigatório"),
-  numeroSerie: z.string().nonempty("O número de série é obrigatório"),
+  NumeroSerie: z.string().nonempty("O número de série é obrigatório"),
   data: z.string().nonempty("O modelo é obrigatório"),
   price: z.string().nonempty("O preço é obrigatório"),
   //whatsapp: z.string().min(1, "O telefone é obrigatório").refine((value) => /^(\d{10,11})$/.test(value), {
@@ -103,11 +103,11 @@ export function New() {
       }
     })
 
-    addDoc(collection(db, "Rots"), { //será o id aleatório criado fire store do banco de dados
+    addDoc(collection(db, "rots"), { //será o id aleatório criado fire store do banco de dados
       model: data.model,
       fabricante: data.fabricante,
       mac: data.mac,
-      NumeroSerie: data.numeroSerie,
+      NumeroSerie: data.NumeroSerie,
       data: data.data,
       price: data.price,
       created: new Date(),
@@ -115,7 +115,7 @@ export function New() {
       uid: user?.uid,
       images: rotListImages,
     }) 
-    .then(() =>{
+    .then(() => {
       reset();
       setRotImages([]);
       console.log("Cadastrado com sucesso!");
@@ -208,7 +208,7 @@ export function New() {
             type="text"
             register={register}
             name="numeroSerie"
-            error={errors.numeroSerie?.message}
+            error={errors.NumeroSerie?.message}
             placeholder="Ex: NSDW475he34g2..."
             />
           </div>

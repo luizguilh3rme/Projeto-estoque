@@ -1,14 +1,16 @@
 import {useState, useEffect} from 'react'
 import { Container } from "../../components/container";
+import { Link } from 'react-router-dom';
 
-import {collection, query, getDocs, orderBy, getDoc} from 'firebase/firestore'
-import {db} from '../../services/firebaseConnection'
+import {collection, query, getDocs, orderBy} from 'firebase/firestore'
+import { db } from '../../services/firebaseConnection'
 
 interface RotsProps{
   id: string;
   model: string;
   data: string;
   mac: string;
+  uid: string;
   price: string | number;
   fabricante: string;
   NumeroSerie: string;
@@ -31,7 +33,23 @@ export function Home() {
 
       getDocs(queryRef)
       .then((snapshot) => {
-        console.log(snapshot.docs)
+        let listrots = [] as RotsProps[];
+
+        snapshot.forEach(doc => {
+          listrots.push({
+            id: doc.id,
+            model: doc.data().model,
+            data: doc.data().data,
+            mac: doc.data().mac,
+            price: doc.data().price,
+            fabricante: doc.data().fabricante,
+            NumeroSerie: doc.data().NumeroSerie,
+            images: doc.data().images,
+            uid: doc.data().uid
+          })
+        })
+
+        setRots(listrots);
       })
     }
 
@@ -54,33 +72,37 @@ export function Home() {
         Roteadores, Onus e ONTs
       </h1>
 
-      {/* O css que faz a separação em 3, 2 e 1 card esta aqui na className do main */}
+      
       <main className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 
-        {/* A section é referente a cada item do roteador */}
-        <section className="w-full bg-white rounded-lg">
+        {rots.map(rot => (
+          // A section é referente a cada item do roteador 
+          <Link key={rot.id} to={`/rot/${rot.id}`}>
+          <section className="w-full bg-white rounded-lg">
           <img
           className="w-full rounded-lg max-h-72 mb-2  hover:scale-105 transition-all" 
-          src="https://backend.intelbras.com/sites/default/files/styles/medium/public/2024-02/sr1041e-frontal.png" 
+          src={rot.images[0].url} 
           alt="Roteador" />
-          <p className="font-bold mt-1 mb-2 px-2">W5-2100G</p>
+          <p className="font-bold mt-1 mb-2 px-2">{rot.model}</p>
 
           <div className="flex flex-col px-2">
-            <span className="text-zinc-700 mb-6">Data 15/12/2025</span>
-            <strong className="text-black font-medium text-xl">Mac: fderwer46yw2</strong>
-            <strong className="text-black font-medium text-xl">NS: NSerwer46yw2</strong>
-            <strong className="text-black font-medium text-xl">Fabricante: Eurotech</strong>
+            <span className="text-zinc-700 mb-6">{rot.data}</span>
+            <strong className="text-black font-medium text-xl">{rot.mac}</strong>
+            <strong className="text-black font-medium text-xl">{rot.NumeroSerie}</strong>
+            <strong className="text-black font-medium text-xl">{rot.fabricante}</strong>
           </div>
 
           <div className="w-full h-px bg-slate-200 my-2"></div>
     
           <div className="px-2 pb-2">
             <span className="text-black">
-              R$ 350.00
+              {rot.price}
             </span>
           </div>
 
         </section>
+          </Link>
+        ))}
         
 
       </main>
