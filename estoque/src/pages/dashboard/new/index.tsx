@@ -207,7 +207,7 @@ export function New() {
             <Input
             type="text"
             register={register}
-            name="numeroSerie"
+            name="NumeroSerie"
             error={errors.NumeroSerie?.message}
             placeholder="Ex: NSDW475he34g2..."
             />
