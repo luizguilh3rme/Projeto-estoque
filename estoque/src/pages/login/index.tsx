@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import logoImg from '../../assets/dsw.png'
-import { Link, replace, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Container } from '../../components/container'
 import { Input } from '../../components/input'
 import {useForm} from 'react-hook-form'
