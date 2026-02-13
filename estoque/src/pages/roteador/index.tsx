@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Container } from "../../components/container"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
 import { getDoc, doc } from "firebase/firestore"
 import { db } from "../../services/firebaseConnection"
@@ -28,6 +28,7 @@ interface ImagesRotProps{
 export function RoteadorDetail() {
   const {id} = useParams();
   const [rot, setRot] = useState<RotProps>()
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadRot(){
@@ -36,6 +37,11 @@ export function RoteadorDetail() {
       const docRef = doc(db, "rots", id)
       getDoc(docRef)
       .then((snapshot) => {
+
+        if(!snapshot.data()){
+          navigate("/")
+        }
+
         setRot({
           id: snapshot.id,
           model: snapshot.data()?.model,
@@ -67,15 +73,15 @@ export function RoteadorDetail() {
           <div className="flex w-full gap-6  my-4">
             <div className="flex flex-col gap-4">
               <div>
-              <p>Fabricante</p>
+              <p>FABRICANTE</p>
               <strong>{rot?.fabricante}</strong>
             </div>
             <div>
-              <p>Mac</p>
+              <p>MAC</p>
               <strong>{rot?.mac}</strong>
             </div>
             <div>
-              <p>Número de série</p>
+              <p>NÚMERO DE SÉRIE</p>
               <strong>{rot?.NumeroSerie}</strong>
             </div>
             </div>

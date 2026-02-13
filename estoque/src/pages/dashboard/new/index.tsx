@@ -10,6 +10,7 @@ import {z} from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AuthContext } from '../../../contexts/AuthContext'
 import {v4 as uuidV4} from 'uuid'
+import toast from "react-hot-toast"
 
 import  {storage, db } from '../../../services/firebaseConnection'
 import {ref, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage'
@@ -83,6 +84,7 @@ export function New() {
         }
 
         setRotImages((images) => [...images,imageItem])
+        toast.success("Imagem cadastrada com sucesso!")
       })
     })
   }
@@ -91,7 +93,7 @@ export function New() {
   function onSubmit(data: FormData){
 
     if(rotImages.length === 0){
-      alert("Envie alguma imagem deste equipamento")
+      toast.error("Envie pelo menos 1 imagem!")
       return;
     }
 
@@ -104,10 +106,10 @@ export function New() {
     })
 
     addDoc(collection(db, "rots"), { //será o id aleatório criado fire store do banco de dados
-      model: data.model,
-      fabricante: data.fabricante,
-      mac: data.mac,
-      NumeroSerie: data.NumeroSerie,
+      model: data.model.toUpperCase(),
+      fabricante: data.fabricante.toUpperCase(),
+      mac: data.mac.toUpperCase(),
+      NumeroSerie: data.NumeroSerie.toUpperCase(),
       data: data.data,
       price: data.price,
       created: new Date(),
@@ -119,6 +121,7 @@ export function New() {
       reset();
       setRotImages([]);
       console.log("Cadastrado com sucesso!");
+      toast.success("Equipamento cadastrado com sucesso!")
     })
     .catch((error) => {
       console.log(error)
