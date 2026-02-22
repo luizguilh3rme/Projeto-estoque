@@ -13,10 +13,14 @@ const router = createBrowserRouter ([
   {
     element: <Layout/>, //esse componente Layout irá aparecer nas demais rotas abaixo
     children: [
-      {
-        path: "/",
-        element: <Home/>
-      },
+      // {
+      //   path: "/",
+      //   element: <Login/>
+      // },
+       {
+         path: "/home",
+         element: <Private><Home/></Private>
+       },
       {
         path: "/roteador/:id",
         element: <RoteadorDetail/>
@@ -31,14 +35,18 @@ const router = createBrowserRouter ([
       },
     ]
   },
-  { // essas duas rotas estão fora do Layout, não terá o mesmo
+   { // essas duas rotas estão fora do Layout, não terá o mesmo
+     path: "/",
+     element: <Login/>
+   },
+   {
     path: "/login",
     element: <Login/>
-  },
-  {
-    path: "/register",
-    element: <Register/>
-  }
+   },
+   {
+     path: "/register",
+     element: <Register/>
+   }
 ])
 
 export {router};

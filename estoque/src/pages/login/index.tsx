@@ -39,7 +39,7 @@ export function Login() {
       console.log("LOGADO COM SUCESSO!")
       console.log(user)
       toast.success("Logado com sucesso!")
-      navigate("/dashboard", {replace: true})
+      navigate("/home", {replace: true})
     })
     .catch(err => {
       console.log("ERRO AO LOGAR")
@@ -84,9 +84,9 @@ export function Login() {
 
         </form>
 
-        <Link to="/register">
+        {/* <Link to="/register">
         Ainda não possui uma conta? Cadastre-se
-        </Link>
+        </Link> */}
 
       </div>
     </Container>

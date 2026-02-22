@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { Container } from "../../components/container"
 import { useNavigate, useParams } from "react-router-dom"
+import { Link } from 'react-router-dom';
+import './index.css'
 
 import { getDoc, doc } from "firebase/firestore"
 import { db } from "../../services/firebaseConnection"
@@ -62,30 +64,41 @@ export function RoteadorDetail() {
 
   return (
     <Container>
-      <h1>SLIDER</h1>
 
       {rot && (
-        <main className="w-full bg-white rounded-lg p-6 my-4">
-          <div className="flex flex-col sm:flex-row mb-4 items-center justify-between">
-            <h1 className="font-bold text-3xl text-black">Modelo: {rot?.model}</h1>
-            <h1 className="font-bold text-3xl text-black">Preço: R${rot?.price}</h1>
+        <main className="main">
+          <div className="main-slider bg-white rounded-lg p-6 my-4">
+          <div className="flex flex-col sm:flex-row mb-8 items-center justify-center">
+            <h1 className="font-bold text-3xl text-black">MODELO: {rot?.model}</h1>
           </div>
           <div className="flex w-full gap-6  my-4">
             <div className="flex flex-col gap-4">
               <div>
-              <p>FABRICANTE</p>
+              <p>PREÇO:</p>
+              <strong>R$ {rot?.price}</strong>
+            </div>
+              <div>
+              <p>FABRICANTE:</p>
               <strong>{rot?.fabricante}</strong>
             </div>
             <div>
-              <p>MAC</p>
+              <p>MAC:</p>
               <strong>{rot?.mac}</strong>
             </div>
             <div>
-              <p>NÚMERO DE SÉRIE</p>
+              <p>NÚMERO DE SÉRIE:</p>
               <strong>{rot?.NumeroSerie}</strong>
             </div>
+
+            <Link key="" to={`/home`}>
+            <button className="btn-back">
+              Voltar
+            </button>
+            </Link>
+
             </div>
           </div>        
+          </div>
         </main>
       )}
     </Container>
