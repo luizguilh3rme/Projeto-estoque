@@ -14,7 +14,7 @@ export function DashboardHeader(){
                 Dashboard
             </Link>
             <Link to="/dashboard/new">
-                Cadastrar roteador
+                Cadastrar Equipamento
             </Link>
 
             <button className="ml-auto" onClick={handleLogout}>

@@ -104,20 +104,20 @@ export function Dashboard() {
         <img className="w-full rounded-lg max-h-72 mb-2 "
         src={rot.images[0].url} alt="" 
         />
-        <p className="font-bold mt-1 px-2 mb-2">{rot.model}</p>
+        <p className="font-bold mt-1 px-2 mb-2">MODELO: {rot.model}</p>
         <div className="flex flex-col px-2">
-          <span className="text-zinc-700">
-            Mac: {rot.mac}
-          </span>
           <strong className="text-black font-bold">
-            R$ {rot.price}
+            MAC: {rot.mac}
+          </strong>
+          <strong className="text-black font-bold">
+            R$: {rot.price}
           </strong>
         </div>
 
          <div className="w-full  h-px bg-slate-200 my-2"></div>
          <div className="px-2 pb-2">
           <span className="text-black">
-            Data: {rot.data}
+            DATA: {rot.data}
           </span>
          </div>
 

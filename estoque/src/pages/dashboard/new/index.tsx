@@ -19,8 +19,8 @@ import {addDoc, collection} from 'firebase/firestore'
 const schema = z.object({
   model: z.string().nonempty("O campo modelo é obrigatório"),
   fabricante: z.string().nonempty("O campo fabricante é obrigatório"),
-  mac: z.string().nonempty("O mac é obrigatório"),
-  NumeroSerie: z.string().nonempty("O número de série é obrigatório"),
+  mac: z.string().nonempty("Informe pelo menos um MAC"),
+  NumeroSerie: z.string().nonempty("Informe pelo menos um número de série"),
   data: z.string().nonempty("O modelo é obrigatório"),
   price: z.string().nonempty("O preço é obrigatório"),
   //whatsapp: z.string().min(1, "O telefone é obrigatório").refine((value) => /^(\d{10,11})$/.test(value), {
@@ -90,45 +90,62 @@ export function New() {
   }
 
 
-  function onSubmit(data: FormData){
+  async function onSubmit(data: FormData){
 
-    if(rotImages.length === 0){
-      toast.error("Envie pelo menos 1 imagem!")
-      return;
-    }
-
-    const rotListImages = rotImages.map(rot => {
-      return{
-        uid: rot.uid,
-        name: rot.name,
-        url: rot.url
-      }
-    })
-
-    addDoc(collection(db, "rots"), { //será o id aleatório criado fire store do banco de dados
-      model: data.model.toUpperCase(),
-      fabricante: data.fabricante.toUpperCase(),
-      mac: data.mac.toUpperCase(),
-      NumeroSerie: data.NumeroSerie.toUpperCase(),
-      data: data.data,
-      price: data.price,
-      created: new Date(),
-      owner: user?.name,
-      uid: user?.uid,
-      images: rotListImages,
-    }) 
-    .then(() => {
-      reset();
-      setRotImages([]);
-      console.log("Cadastrado com sucesso!");
-      toast.success("Equipamento cadastrado com sucesso!")
-    })
-    .catch((error) => {
-      console.log(error)
-      console.log("Erro ao cadastrar no banco")
-    })
-    
+  if(rotImages.length === 0){
+    toast.error("Envie pelo menos 1 imagem!")
+    return;
   }
+
+  const macList = data.mac
+    .split('\n')
+    .map(mac => mac.trim().toUpperCase())
+    .filter(mac => mac !== "");
+
+  const serialList = data.NumeroSerie
+    .split('\n')
+    .map(serial => serial.trim().toUpperCase())
+    .filter(serial => serial !== "");
+
+  if(macList.length !== serialList.length){
+    toast.error("Quantidade de MACs e números de série não coincide!");
+    return;
+  }
+
+  const rotListImages = rotImages.map(rot => ({
+    uid: rot.uid,
+    name: rot.name,
+    url: rot.url
+  }));
+
+  try {
+
+    const promises = macList.map((mac, index) => {
+      return addDoc(collection(db, "rots"), {
+        model: data.model.toUpperCase(),
+        fabricante: data.fabricante.toUpperCase(),
+        mac: mac,
+        NumeroSerie: serialList[index],
+        data: data.data,
+        price: data.price,
+        created: new Date(),
+        owner: user?.name,
+        uid: user?.uid,
+        images: rotListImages,
+      });
+    });
+
+    await Promise.all(promises);
+
+    reset();
+    setRotImages([]);
+    toast.success(`${macList.length} equipamentos cadastrados com sucesso!`);
+
+  } catch (error) {
+    console.log(error);
+    toast.error("Erro ao cadastrar em lote");
+  }
+}
 
   async function handleDeleteImage(item: ImageItemProps){
     const imagePath = `images/${item.uid}/${item.name}`; //Esse é o diretório para ir no fire base apagar a imagem quando clicar no botão delete
@@ -196,24 +213,25 @@ export function New() {
 
           <div className="mb-3">
             <p className="mb-2 font-medium">Mac</p>
-            <Input
-            type="text"
-            register={register}
-            name="mac"
-            error={errors.mac?.message}
-            placeholder="Ex: ue38hf47ue28..."
-            />
+
+            <textarea
+            {...register("mac")}
+            className="w-full border rounded-md p-2"
+            placeholder="Cole todos os MACs (um por linha)"
+            ></textarea>
+          <p className="text-red-500 text-sm">{errors.mac?.message}</p>
+
           </div>
 
           <div className="mb-3">
             <p className="mb-2 font-medium">Número de série</p> 
-            <Input
-            type="text"
-            register={register}
-            name="NumeroSerie"
-            error={errors.NumeroSerie?.message}
-            placeholder="Ex: NSDW475he34g2..."
-            />
+            <textarea
+              {...register("NumeroSerie")}
+              className="w-full border rounded-md p-2"
+              placeholder="Cole todos os números de série (um por linha)"
+            ></textarea>
+            <p className="text-red-500 text-sm">{errors.NumeroSerie?.message}</p>
+
           </div>
 
           <div className="flex w-full mb-3 flex-row items-center gap-4">
