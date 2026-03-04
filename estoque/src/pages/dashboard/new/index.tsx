@@ -14,19 +14,52 @@ import toast from "react-hot-toast"
 
 import  {storage, db } from '../../../services/firebaseConnection'
 import {ref, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage'
-import {addDoc, collection} from 'firebase/firestore'
+import {addDoc, collection, query, where, getDocs} from 'firebase/firestore'
 
 const schema = z.object({
   model: z.string().nonempty("O campo modelo é obrigatório"),
-  fabricante: z.string().nonempty("O campo fabricante é obrigatório"),
-  mac: z.string().nonempty("Informe pelo menos um MAC"),
-  NumeroSerie: z.string().nonempty("Informe pelo menos um número de série"),
-  data: z.string().nonempty("O modelo é obrigatório"),
-  price: z.string().nonempty("O preço é obrigatório"),
-  //whatsapp: z.string().min(1, "O telefone é obrigatório").refine((value) => /^(\d{10,11})$/.test(value), {
-  //message: "Número de telefone inválido"})
-})
 
+  fabricante: z.string().nonempty("O campo fabricante é obrigatório"),
+
+  mac: z
+    .string()
+    .nonempty("Informe pelo menos um MAC")
+    .refine((value) => {
+      const macList = value
+        .split("\n")
+        .map(mac => mac.trim())
+        .filter(mac => mac !== "");
+
+      return macList.every(mac => /^[A-Za-z0-9]{12}$/.test(mac));
+    }, {
+      message: "Cada MAC deve conter exatamente 12 caracteres (apenas letras e números)"
+    }),
+
+  NumeroSerie: z
+    .string()
+    .nonempty("Informe pelo menos um número de série")
+    .refine((value) => {
+      const serialList = value
+        .split("\n")
+        .map(serial => serial.trim())
+        .filter(serial => serial !== "");
+
+      return serialList.every(serial => /^[A-Za-z0-9]{12}$/.test(serial));
+    }, {
+      message: "Cada número de série deve conter exatamente 12 caracteres (apenas letras e números)"
+    }),
+
+  data: z.string().nonempty("A data é obrigatória"),
+
+  price: z
+    .string()
+    .nonempty("O preço é obrigatório")
+    .regex(/^\d+(\.\d{2})$/, "Preço deve estar no formato 000.00 (ex: 350.00)")
+});
+
+
+//whatsapp: z.string().min(1, "O telefone é obrigatório").refine((value) => /^(\d{10,11})$/.test(value), {
+//message: "Número de telefone inválido"})
 type FormData = z.infer<typeof schema>;
 
 interface ImageItemProps{
@@ -118,33 +151,67 @@ export function New() {
     url: rot.url
   }));
 
-  try {
+      try {
 
-    const promises = macList.map((mac, index) => {
-      return addDoc(collection(db, "rots"), {
-        model: data.model.toUpperCase(),
-        fabricante: data.fabricante.toUpperCase(),
-        mac: mac,
-        NumeroSerie: serialList[index],
-        data: data.data,
-        price: data.price,
-        created: new Date(),
-        owner: user?.name,
-        uid: user?.uid,
-        images: rotListImages,
+      for (let i = 0; i < macList.length; i++) {
+
+        const mac = macList[i];
+        const serial = serialList[i];
+
+        // 🔎 Verifica MAC duplicado
+        const macQuery = query(
+          collection(db, "rots"),
+          where("mac", "==", mac)
+        );
+
+        const macSnapshot = await getDocs(macQuery);
+
+        if (!macSnapshot.empty) {
+          toast.error(`MAC ${mac} já está cadastrado!`);
+          return;
+        }
+
+        // 🔎 Verifica Número de Série duplicado
+        const serialQuery = query(
+          collection(db, "rots"),
+          where("NumeroSerie", "==", serial)
+        );
+
+        const serialSnapshot = await getDocs(serialQuery);
+
+        if (!serialSnapshot.empty) {
+          toast.error(`Número de Série ${serial} já está cadastrado!`);
+          return;
+        }
+      }
+
+      // ✅ Se passou nas verificações, salva tudo
+      const promises = macList.map((mac, index) => {
+        return addDoc(collection(db, "rots"), {
+          model: data.model.toUpperCase(),
+          fabricante: data.fabricante.toUpperCase(),
+          mac: mac,
+          NumeroSerie: serialList[index],
+          data: data.data,
+          price: Number(data.price),
+          created: new Date(),
+          owner: user?.name,
+          uid: user?.uid,
+          images: rotListImages,
+        });
       });
-    });
 
-    await Promise.all(promises);
+      await Promise.all(promises);
 
-    reset();
-    setRotImages([]);
-    toast.success(`${macList.length} equipamentos cadastrados com sucesso!`);
+      reset();
+      setRotImages([]);
+      toast.success(`${macList.length} equipamentos cadastrados com sucesso!`);
 
-  } catch (error) {
-    console.log(error);
-    toast.error("Erro ao cadastrar em lote");
-  }
+    } catch (error) {
+      console.log(error);
+      toast.error("Erro ao cadastrar em lote");
+    }
+
 }
 
   async function handleDeleteImage(item: ImageItemProps){
@@ -267,4 +334,3 @@ export function New() {
     </Container>
   )
 }
-
