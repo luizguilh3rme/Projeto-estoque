@@ -66,29 +66,41 @@ export function RoteadorDetail() {
     <Container>
 
       {rot && (
+        
         <main className="main">
           <div className="main-slider bg-white rounded-lg p-6 my-4">
           <div className="flex flex-col sm:flex-row mb-8 items-center justify-center">
             <h1 className="font-bold text-3xl text-black">MODELO: {rot?.model}</h1>
           </div>
-          <div className="flex w-full gap-6  my-4">
-            <div className="flex flex-col gap-4">
-              <div>
-              <p>PREÇO:</p>
-              <strong>R$ {rot?.price}</strong>
-            </div>
-              <div>
-              <p>FABRICANTE:</p>
-              <strong>{rot?.fabricante}</strong>
-            </div>
-            <div>
-              <p>MAC:</p>
-              <strong>{rot?.mac}</strong>
-            </div>
-            <div>
-              <p>NÚMERO DE SÉRIE:</p>
-              <strong>{rot?.NumeroSerie}</strong>
-            </div>
+          <div className="w-full max-w-2xl mx-auto bg-white rounded-lg p-4">
+
+  {/* Linha 1 */}
+  <div className="grid grid-cols-2 gap-6 text-center mb-4">
+    <div>
+      <p className="text-gray-500 text-sm">PREÇO</p>
+      <strong className="text-lg">R$ {rot?.price}</strong>
+    </div>
+
+    <div>
+      <p className="text-gray-500 text-sm">FABRICANTE</p>
+      <strong className="text-lg">{rot?.fabricante}</strong>
+    </div>
+  </div>
+
+  {/* Linha 2 */}
+  <div className="grid grid-cols-2 gap-6 text-center">
+    <div>
+      <p className="text-gray-500 text-sm">MAC</p>
+      <strong className="text-lg break-words">{rot?.mac}</strong>
+    </div>
+
+    <div>
+      <p className="text-gray-500 text-sm">NÚMERO DE SÉRIE</p>
+      <strong className="text-lg break-words">{rot?.NumeroSerie}</strong>
+    </div>
+  </div>
+
+</div>
 
             <Link key="" to={`/home`}>
             <button className="btn-back">
@@ -96,8 +108,7 @@ export function RoteadorDetail() {
             </button>
             </Link>
 
-            </div>
-          </div>        
+            
           </div>
         </main>
       )}

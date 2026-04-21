@@ -30,30 +30,36 @@ export function Home() {
 
   // ✅ FUNÇÃO PARA CALCULAR MESES
   function getMonthsDifference(dateString: string) {
-    const [day, month, year] = dateString.split("/");
+  const createdDate = new Date(dateString); // funciona com YYYY-MM-DD
 
-    const createdDate = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day)
-    );
+  const today = new Date();
 
-    const today = new Date();
+  const years = today.getFullYear() - createdDate.getFullYear();
+  const months = today.getMonth() - createdDate.getMonth();
 
-    const years = today.getFullYear() - createdDate.getFullYear();
-    const months = today.getMonth() - createdDate.getMonth();
+  return years * 12 + months;
+}
 
-    return years * 12 + months;
-  }
 
   // ✅ FUNÇÃO PARA DEFINIR COR
-  function getTagColor(dateString: string) {
+    function getTagColor(dateString: string, model: string) {
     const months = getMonthsDifference(dateString);
 
+    const isRouter = model.toUpperCase().includes("ROTEADOR");
+
+    // 🔵 REGRA PARA ROTEADORES
+    if (isRouter) {
+      if (months <= 24) return "bg-green-500";
+      if (months <= 60) return "bg-yellow-400";
+      return "bg-red-600";
+    }
+
+    // 🟢 REGRA PADRÃO (ONT / ONU)
     if (months < 6) return "bg-green-500";
-    if (months >= 6 && months < 12) return "bg-yellow-400";
+    if (months < 12) return "bg-yellow-400";
     return "bg-red-600";
   }
+
 
   useEffect(() => {
     loadRots();
@@ -110,9 +116,11 @@ export function Home() {
       where("NumeroSerie", "<=", input.toUpperCase() + "\uf8ff")
     );
 
+    
+
     const [macSnapshot, serieSnapshot] = await Promise.all([
       getDocs(macQuery),
-      getDocs(serieQuery)
+      getDocs(serieQuery),
     ]);
 
     let listrots: RotsProps[] = [];
@@ -130,9 +138,71 @@ export function Home() {
     setRots(listrots);
   }
 
+
+  //Filtrar pelo modelo selecionado
+  const [filterModel, setFilterModel] = useState<string>("")
+
+  const filteredRots = filterModel
+  ? rots.filter(rot =>
+      rot.model.toUpperCase().includes(filterModel.toUpperCase())
+    )
+  : rots;
+
+  //Mostrar a quantidade de equipamentos totais do modelo que foi filtrado em sistema
+  const totalFiltrados = filteredRots.length;
+
+
+
   return (
     <Container>
 
+      <section className='flex flex-col gap-3'>
+
+  {/* 🔹 TOTAL (alinhado à esquerda) */}
+  <div className="flex justify-start">
+    <h2 className="text-lg bg-green-500 h-8 px-3 rounded-lg text-white font-medium flex items-center">
+      {filterModel
+        ? `Total de ${filterModel}: ${totalFiltrados}`
+        : `Total de equipamentos: ${totalFiltrados}`}
+    </h2>
+  </div>
+  <br />
+
+  {/* 🔹 BOTÕES (centralizados) */}
+  <div className='flex flex-wrap gap-4 justify-center'>
+
+    <button onClick={() => setFilterModel("W5")}
+      className='bg-red-500 h-8 px-7 rounded-lg text-white font-medium text-lg'>
+      ROTEADOR W5  GIGA
+    </button>
+
+    <button onClick={() => setFilterModel("SR1041E")}
+      className='bg-red-500 h-8 px-7 rounded-lg text-white font-medium text-lg'>
+      ROTEADOR SR1041E
+    </button>
+
+    <button onClick={() => setFilterModel("ONT")}
+      className='bg-red-500 h-8 px-7 rounded-lg text-white font-medium text-lg'>
+      ONT INTELBRAS
+    </button>
+
+    <button onClick={() => setFilterModel("ONU INTELBRAS")}
+      className='bg-red-500 h-8 px-7 rounded-lg text-white font-medium text-lg'>
+      ONU INTELBRAS
+    </button>
+
+    <button onClick={() => setFilterModel("TP-LINK")}
+      className='bg-red-500 h-8 px-7 rounded-lg text-white font-medium text-lg'>
+      ONU TP-LINK
+    </button>
+
+  </div>
+
+</section>
+
+    <br />
+    <br />
+    
       <section className="bg-white p-4 rounded-lg w-full max-w-3xl mx-auto flex justify-center items-center gap-2">
         <input
           className="w-full border-2 rounded-lg h-9 px-3 outline-none"
@@ -149,15 +219,15 @@ export function Home() {
       </section>
 
       <h1 className="font-bold text-center mt-6 text-2xl mb-4">
-        Roteadores, Onus e ONTs
+        ESTOQUE
       </h1>
 
       <main className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 
-        {rots.map(rot => {
+        {filteredRots.map(rot => {
 
           const months = getMonthsDifference(rot.data);
-          const tagColor = getTagColor(rot.data);
+          const tagColor = getTagColor(rot.data, rot.model);
 
           return (
             <Link key={rot.id} to={`/roteador/${rot.id}`}>
@@ -186,7 +256,7 @@ export function Home() {
                     MODELO: {rot.model}
                   </strong>
                   <strong className="font-bold mt-1 mb-2 px-2">
-                    MAC: {rot.mac}
+                    {rot.mac}
                   </strong>
                   <span className="text-zinc-700 mt-1 mb-2 px-2">
                     DATA CADASTRO: {rot.data}

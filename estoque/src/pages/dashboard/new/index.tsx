@@ -30,9 +30,9 @@ const schema = z.object({
         .map(mac => mac.trim())
         .filter(mac => mac !== "");
 
-      return macList.every(mac => /^[A-Za-z0-9]{12}$/.test(mac));
+      return macList.every(mac => /^[A-Za-z0-9:-]+$/.test(mac));
     }, {
-      message: "Cada MAC deve conter exatamente 12 caracteres (apenas letras e números)"
+      message: "MAC deve conter apenas letras, números, ':' ou '-'"
     }),
 
   NumeroSerie: z
@@ -44,12 +44,25 @@ const schema = z.object({
         .map(serial => serial.trim())
         .filter(serial => serial !== "");
 
-      return serialList.every(serial => /^[A-Za-z0-9]{12}$/.test(serial));
+      return serialList.every(serial => /^[A-Za-z0-9]+$/.test(serial));
     }, {
-      message: "Cada número de série deve conter exatamente 12 caracteres (apenas letras e números)"
+      message: "Cada número de série deve conter letras e números"
     }),
 
-  data: z.string().nonempty("A data é obrigatória"),
+  data: z
+  .string()
+  .nonempty("A data é obrigatória")
+  .refine((date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+
+    // zera hora pra comparar só a data
+    today.setHours(0, 0, 0, 0);
+
+    return selectedDate <= today;
+  }, {
+    message: "A data não pode ser futura"
+  }),
 
   price: z
     .string()
@@ -131,9 +144,9 @@ export function New() {
   }
 
   const macList = data.mac
-    .split('\n')
-    .map(mac => mac.trim().toUpperCase())
-    .filter(mac => mac !== "");
+  .split('\n')
+  .map(mac => mac.trim().toUpperCase())
+  .filter(mac => mac !== "");
 
   const serialList = data.NumeroSerie
     .split('\n')
@@ -258,13 +271,19 @@ export function New() {
         <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-3">
             <p className="mb-2 font-medium">Modelo do equipamento</p>
-            <Input
-            type="text"
-            register={register}
-            name="model"
-            error={errors.model?.message}
-            placeholder="Ex: ONT 121 AC..."
-            />
+            <select
+              {...register("model")}
+              className="w-full border rounded-md p-2"
+            >
+              <option value="">selecionar o modelo</option>
+              <option value="ROTEADOR W5 GIGA">Roteador W5 Giga</option>
+              <option value="ROTEADOR SR1041E">Roteador SR1041E</option>
+              <option value="ONT INTELBRAS">ONT Intelbras</option>
+              <option value="ONU INTELBRAS">ONU Intelbras</option>
+              <option value="ONU TP-LINK">ONU TP-Link</option>
+            </select>
+
+            <p className="text-red-500 text-sm">{errors.model?.message}</p>
           </div>
 
           <div className="mb-3">
@@ -305,11 +324,11 @@ export function New() {
             <div className="w-full">
             <p className="mb-2 font-medium">Data</p>
             <Input
-            type="text"
+            type="date"
             register={register}
             name="data"
             error={errors.data?.message}
-            placeholder="Ex: 12/12/2026..."
+            placeholder=""
             />
           </div>
 

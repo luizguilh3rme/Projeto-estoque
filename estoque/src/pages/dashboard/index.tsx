@@ -141,7 +141,7 @@ export function Dashboard() {
 
               <div className="flex flex-col px-2">
                 <strong className="text-black font-bold">
-                  MAC: {rot.mac}
+                  {rot.mac}
                 </strong>
                 <strong className="text-black font-bold">
                   R$: {rot.price}
