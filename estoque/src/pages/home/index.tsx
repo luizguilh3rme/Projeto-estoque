@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Container } from "../../components/container";
 import { Link } from 'react-router-dom';
 
+
 import { collection, query, getDocs, orderBy, where } from 'firebase/firestore'
 import { db } from '../../services/firebaseConnection'
 
@@ -39,6 +40,11 @@ export function Home() {
 
   return years * 12 + months;
 }
+
+
+
+  // Filtro para selecionar os meses
+  const [filterDate, setFilterDate] = useState("");
 
 
   // ✅ FUNÇÃO PARA DEFINIR COR
@@ -142,11 +148,27 @@ export function Home() {
   //Filtrar pelo modelo selecionado
   const [filterModel, setFilterModel] = useState<string>("")
 
-  const filteredRots = filterModel
-  ? rots.filter(rot =>
-      rot.model.toUpperCase().includes(filterModel.toUpperCase())
-    )
-  : rots;
+  const filteredRots = rots.filter(rot => {
+  // filtro por modelo
+  const matchModel = filterModel
+    ? rot.model.toUpperCase().includes(filterModel.toUpperCase())
+    : true;
+
+  // filtro por mês + ano
+  let matchDate = true;
+
+  if (filterDate) {
+    const rotDate = new Date(rot.data);
+    const rotMonth = String(rotDate.getMonth() + 1).padStart(2, "0");
+    const rotYear = rotDate.getFullYear();
+
+    const [year, month] = filterDate.split("-");
+
+    matchDate = rotMonth === month && String(rotYear) === year;
+  }
+
+  return matchModel && matchDate;
+});
 
   //Mostrar a quantidade de equipamentos totais do modelo que foi filtrado em sistema
   const totalFiltrados = filteredRots.length;
@@ -154,19 +176,51 @@ export function Home() {
 
 
   return (
-    <Container>
+  <Container>
+    
 
-      <section className='flex flex-col gap-3'>
+  <section className='flex flex-col gap-3'>
 
-  {/* 🔹 TOTAL (alinhado à esquerda) */}
-  <div className="flex justify-start">
-    <h2 className="text-lg bg-green-500 h-8 px-3 rounded-lg text-white font-medium flex items-center">
-      {filterModel
-        ? `Total de ${filterModel}: ${totalFiltrados}`
-        : `Total de equipamentos: ${totalFiltrados}`}
-    </h2>
+    <div className="flex items-center justify-between w-full">
+
+  {/* 🔹 TOTAL (ESQUERDA) */}
+  <h2 className="text-lg bg-green-500 h-8 px-3 rounded-lg text-white font-medium flex items-center">
+    {filterModel
+      ? `Total de ${filterModel}: ${totalFiltrados}`
+      : `Total de equipamentos: ${totalFiltrados}`}
+  </h2>
+
+  {/* 🔹 FILTRO DE MÊS (DIREITA) */}
+  <div className="flex items-center gap-2">
+    <input
+      type="month"
+      value={filterDate}
+      onChange={(e) => setFilterDate(e.target.value)}
+      className="
+        bg-white 
+        border-2 border-gray-300 
+        rounded-lg 
+        px-3 py-2 
+        text-gray-700 
+        shadow-sm
+        focus:outline-none 
+        focus:ring-2 
+        focus:ring-blue-500 
+        focus:border-blue-500
+        cursor-pointer
+      "
+    />
+
+    <button
+      onClick={() => setFilterDate("")}
+      className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-white"
+    >
+      Limpar
+    </button>
   </div>
-  <br />
+
+</div>
+    <br />
 
   {/* 🔹 BOTÕES (centralizados) */}
   <div className='flex flex-wrap gap-4 justify-center'>
@@ -197,6 +251,11 @@ export function Home() {
     </button>
 
   </div>
+
+
+
+
+
 
 </section>
 
