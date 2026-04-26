@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { AuthContext } from '../../contexts/AuthContext'
 import logoImg from '../../assets/dsw.png'
-import {Link} from 'react-router-dom'
+import {Link, useNavigate } from 'react-router-dom'
 import {FiUser, FiLogIn} from 'react-icons/fi'
 import './index.css'
 
@@ -10,19 +10,24 @@ import './index.css'
 export function Header() {
     const { signed, loadingAuth } = useContext(AuthContext);
 
+    // Recarregar a página ao clicar na  logo
+    const navigate = useNavigate(); // 👈 aqui
+
+  function handleGoHome() {
+    navigate("/home", { state: { reset: true } });
+  }
+
     
 
   return (
     <div className="w-full flex items-center justify-center h-16 bg-white drop-shadow mb-4">
       <header className="flex w-full max-w-7xl items-center justify-between px-4 mx-auto">
-        <Link to="/home">
-            <img 
-  src={logoImg}
-  alt="Logo do site" 
-  className='w-16 h-auto cursor-pointer'
-  
-/>
-        </Link>
+        <img 
+          src={logoImg}
+          alt="Logo do site" 
+          className='w-16 h-auto cursor-pointer'
+          onClick={handleGoHome}
+        />
 
         {!loadingAuth && signed && (
             <Link to="/dashboard">

@@ -17,6 +17,7 @@ interface RotProps {
   price: string | number;
   fabricante: string;
   NumeroSerie: string;
+  cliente?: string;
   images: ImageRotProps[];
 }
 
@@ -30,23 +31,32 @@ export function Dashboard() {
   const [rots, setRots] = useState<RotProps[]>([]);
   const { user } = useContext(AuthContext);
 
+  // Buscar equipamentos
+  const [search, setSearch] = useState("");
+
+  const filteredRots = rots.filter(rot => {
+  const value = search.toUpperCase();
+
+  return (
+    rot.mac?.toUpperCase().includes(value) ||
+    rot.NumeroSerie?.toUpperCase().includes(value) ||
+    rot.model?.toUpperCase().includes(value) ||
+    rot.cliente?.toUpperCase().includes(value)
+  );
+});
+
+
   // ✅ FUNÇÃO PARA CALCULAR MESES
   function getMonthsDifference(dateString: string) {
-    const [day, month, year] = dateString.split("/");
+  const createdDate = new Date(dateString); // ✅ funciona com YYYY-MM-DD
 
-    const createdDate = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day)
-    );
+  const today = new Date();
 
-    const today = new Date();
+  const years = today.getFullYear() - createdDate.getFullYear();
+  const months = today.getMonth() - createdDate.getMonth();
 
-    const years = today.getFullYear() - createdDate.getFullYear();
-    const months = today.getMonth() - createdDate.getMonth();
-
-    return years * 12 + months;
-  }
+  return years * 12 + months;
+}
 
   // ✅ FUNÇÃO PARA DEFINIR COR
   function getTagColor(dateString: string) {
@@ -79,6 +89,7 @@ export function Dashboard() {
               price: doc.data().price,
               fabricante: doc.data().fabricante,
               NumeroSerie: doc.data().NumeroSerie,
+              cliente: doc.data().cliente || "",
               images: doc.data().images,
               uid: doc.data().uid
             })
@@ -111,14 +122,33 @@ export function Dashboard() {
     <Container>
       <DashboardHeader />
 
+      <section className="bg-white p-3 rounded-lg w-full max-w-xl mx-auto flex gap-2 mb-4">
+      <input
+        className="w-full border-2 rounded-lg h-9 px-3 outline-none"
+        placeholder="Buscar por MAC, série ou modelo..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      <button
+        onClick={() => setSearch("")}
+        className="bg-gray-500 px-4 rounded-lg text-white"
+      >
+        Limpar
+      </button>
+    </section>
+
       <main className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {rots.map((rot) => {
+        {filteredRots.map((rot) => {
 
           const months = getMonthsDifference(rot.data);
           const tagColor = getTagColor(rot.data);
 
           return (
+         
+            
             <section key={rot.id} className="w-full bg-white rounded-lg relative shadow-md">
+
 
               {/* ✅ ETIQUETA DE TEMPO */}
               <div className={`${tagColor} text-white text-xs px-2 py-1 rounded absolute left-2 top-2`}>
@@ -143,16 +173,20 @@ export function Dashboard() {
                 <strong className="text-black font-bold">
                   {rot.mac}
                 </strong>
+                <br />
                 <strong className="text-black font-bold">
                   R$: {rot.price}
                 </strong>
-              </div>
 
-              <div className="w-full h-px bg-slate-200 my-2"></div>
-
-              <div className="px-2 pb-2">
-                <span className="text-black">
-                  DATA: {rot.data}
+                {/* ✅ CLIENTE */}
+                <span className={`text-xs px-2 py-1 rounded mt-2 w-fit ${
+                  rot.cliente 
+                    ? "bg-red-100 text-red-600" 
+                    : "bg-green-100 text-green-600"
+                }`}>
+                  {rot.cliente 
+                    ? `Em uso: ${rot.cliente}` 
+                    : "Disponível"}
                 </span>
               </div>
 

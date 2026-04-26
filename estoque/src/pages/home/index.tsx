@@ -6,6 +6,9 @@ import { Link } from 'react-router-dom';
 import { collection, query, getDocs, orderBy, where } from 'firebase/firestore'
 import { db } from '../../services/firebaseConnection'
 
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 interface RotsProps {
   id: string;
   model: string;
@@ -15,6 +18,7 @@ interface RotsProps {
   price: string | number;
   fabricante: string;
   NumeroSerie: string;
+  cliente?: string;
   images: RotImageProps[];
 }
 
@@ -66,10 +70,35 @@ export function Home() {
     return "bg-red-600";
   }
 
+  //Botão de editar
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     loadRots();
   }, [])
+
+  //Recarrega a página ao clicar na logo
+  const location = useLocation();
+
+  // 🔥 ADICIONA ESSE AQUI
+  useEffect(() => {
+  if (location.state?.reset) {
+    setFilterModel("");
+    setFilterDate("");
+    setInput("");
+    loadRots(); // 👈 recarrega lista também
+  }
+}, [location.state]);
+
+  //Recarrega a pagina ao clica na logo e no botão de limpar
+  function handleClearAll() {
+  setFilterModel("");
+  setFilterDate("");
+  setInput("");
+}
+
+
 
   function loadRots() {
     const rotsRef = collection(db, "rots")
@@ -88,6 +117,7 @@ export function Home() {
             price: doc.data().price,
             fabricante: doc.data().fabricante,
             NumeroSerie: doc.data().NumeroSerie,
+            cliente: doc.data().cliente || "",
             images: doc.data().images,
             uid: doc.data().uid
           })
@@ -110,6 +140,7 @@ export function Home() {
     setRots([]);
     setLoadImages([]);
 
+    // Filtro para realizar as buscas no sistema
     const macQuery = query(
       collection(db, "rots"),
       where("mac", ">=", input.toUpperCase()),
@@ -122,11 +153,18 @@ export function Home() {
       where("NumeroSerie", "<=", input.toUpperCase() + "\uf8ff")
     );
 
+    const clienteQuery = query(
+      collection(db, "rots"),
+      where("cliente_lower", ">=", input.toLowerCase()),
+      where("cliente_lower", "<=", input.toLowerCase() + "\uf8ff")
+    );
+
     
 
-    const [macSnapshot, serieSnapshot] = await Promise.all([
+    const [macSnapshot, serieSnapshot, clienteSnapshot] = await Promise.all([
       getDocs(macQuery),
       getDocs(serieQuery),
+      getDocs(clienteQuery),
     ]);
 
     let listrots: RotsProps[] = [];
@@ -136,6 +174,12 @@ export function Home() {
     });
 
     serieSnapshot.docs.forEach((doc) => {
+      if (!listrots.some(item => item.id === doc.id)) {
+        listrots.push({ id: doc.id, ...doc.data() } as RotsProps);
+      }
+    });
+
+    clienteSnapshot.docs.forEach((doc) => {
       if (!listrots.some(item => item.id === doc.id)) {
         listrots.push({ id: doc.id, ...doc.data() } as RotsProps);
       }
@@ -184,7 +228,7 @@ export function Home() {
     <div className="flex items-center justify-between w-full">
 
   {/* 🔹 TOTAL (ESQUERDA) */}
-  <h2 className="text-lg bg-green-500 h-8 px-3 rounded-lg text-white font-medium flex items-center">
+  <h2 className="text-lg bg-red-500 h-8 px-3 rounded-lg text-white font-medium flex items-center">
     {filterModel
       ? `Total de ${filterModel}: ${totalFiltrados}`
       : `Total de equipamentos: ${totalFiltrados}`}
@@ -211,12 +255,9 @@ export function Home() {
       "
     />
 
-    <button
-      onClick={() => setFilterDate("")}
-      className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-white"
-    >
-      Limpar
-    </button>
+      <button onClick={handleClearAll}>
+        Limpar
+      </button>   
   </div>
 
 </div>
@@ -253,10 +294,6 @@ export function Home() {
   </div>
 
 
-
-
-
-
 </section>
 
     <br />
@@ -265,7 +302,7 @@ export function Home() {
       <section className="bg-white p-4 rounded-lg w-full max-w-3xl mx-auto flex justify-center items-center gap-2">
         <input
           className="w-full border-2 rounded-lg h-9 px-3 outline-none"
-          placeholder="Digite o mac ou número de série..."
+          placeholder="Buscar por mac, número de série ou cliente..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
@@ -297,13 +334,27 @@ export function Home() {
                   {months} meses
                 </div>
 
+                {/* ✅ BOTÃO EDITAR */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); // 🚫 impede o Link
+                    e.stopPropagation(); // 🚫 impede propagação
+
+                    // aqui você abre edição
+                    navigate(`/roteador/${rot.id}?edit=true`)
+                  }}
+                  className="absolute right-2 top-2 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs"
+                >
+                  Editar
+                </button>
+
                 <div
                   className='w-full h-72 rounded-lg bg-slate-200'
                   style={{ display: loadImages.includes(rot.id) ? "none" : "block" }}>
                 </div>
 
                 <img
-                  className="w-full rounded-lg max-h-72 mb-2 hover:scale-105 transition-all"
+                  className="w-full rounded-lg max-h-72 mb-2 transition-all"
                   src={rot.images[0]?.url}
                   alt="Roteador"
                   onLoad={() => handleImageLoad(rot.id)}
@@ -311,13 +362,19 @@ export function Home() {
                 />
 
                 <div className="flex flex-col px-2">
-                  <strong className="font-bold mt-1 mb-2 px-2">
+                  {/* ✅ CLIENTE */}
+                  <span className="text-zinc-700 mt-1 mb-2 px-2 text-center">
+                    {rot.cliente 
+                      ? `Cliente: ${rot.cliente}` 
+                      : "Disponível"}
+                  </span>
+                  <strong className="font-bold mt-1 mb-2 px-2 text-center">
                     MODELO: {rot.model}
                   </strong>
-                  <strong className="font-bold mt-1 mb-2 px-2">
+                  <strong className="font-bold mt-1 mb-2 px-2 text-center">
                     {rot.mac}
                   </strong>
-                  <span className="text-zinc-700 mt-1 mb-2 px-2">
+                  <span className="text-zinc-700 mt-1 mb-2 px-2 text-center">
                     DATA CADASTRO: {rot.data}
                   </span>
                 </div>
